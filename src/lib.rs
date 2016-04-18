@@ -54,7 +54,7 @@ impl Menu {
 
         writeln!(output,
                  "> Made with :cnr: by @anrussell. Source available at \
-                  https://github.com/euclio/nourishbot")
+                  https://github.com/euclio/nourishbot.")
             .unwrap();
 
         output
@@ -91,7 +91,12 @@ pub fn parse_menu(html: &str) -> Menu {
         }
 
         if let Some("font-weight:bold;") = node.attr("style") {
-            last_category = Some(text.to_lower_case().to_title_case());
+            let category = text.to_lower_case().to_title_case();
+
+            // Filter out breakfast.
+            if category != "Breakfast Special" {
+                last_category = Some(text.to_lower_case().to_title_case());
+            }
         } else {
             if let Some(ref category) = last_category {
                 if menu.contains_key(category) {
