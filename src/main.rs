@@ -18,10 +18,12 @@ Nourishbot!
 
 Usage:
     nourishbot help
+    nourishbot print
     nourishbot post <slack-channel>...
 
-Options:
+Subcommands:
     help                   Show this screen.
+    print                  Print the Nourish menu.
     post                   Post the menu to the given Slack channels.
 ";
 
@@ -69,6 +71,4 @@ fn main() {
             Err(err) => println!("Error posting to {}: {}", channel, err),
         }
     }
-
-    println!("{:?}", args);
 }
