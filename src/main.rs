@@ -65,7 +65,7 @@ fn main() {
             icon_url: None,
             icon_emoji: Some(":athena:"),
             attachments: None,
-            unfurl_links: Some(true),
+            unfurl_links: Some(false),
             link_names: Some(false),
         });
 

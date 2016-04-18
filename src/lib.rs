@@ -43,14 +43,19 @@ impl Menu {
         let mut output = String::default();
 
         for (ref category, ref items) in &self.0 {
-            writeln!(output, "# {}\n", category).unwrap();
+            writeln!(output, "*{}*\n", category).unwrap();
 
             for item in items.iter() {
-                writeln!(output, "- {}", item).unwrap();
+                writeln!(output, "• {}", item).unwrap();
             }
 
             writeln!(output, "").unwrap();
         }
+
+        writeln!(output,
+                 "> Made with :cnr: by @anrussell. Source available at \
+                  https://github.com/euclio/nourishbot")
+            .unwrap();
 
         output
     }
