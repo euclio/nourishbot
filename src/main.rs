@@ -1,10 +1,12 @@
 extern crate chrono;
 extern crate docopt;
+extern crate dotenv;
 extern crate hyper;
 extern crate nourish_bot;
 extern crate rustc_serialize;
 extern crate slack_hook;
 
+use std::env;
 use std::io::prelude::*;
 
 use chrono::Local;
@@ -34,6 +36,8 @@ struct Args {
 
 fn main() {
     let args: Args = Docopt::new(USAGE).and_then(|d| d.decode()).unwrap_or_else(|e| e.exit());
+    dotenv::dotenv().ok();
+
     let url = nourish_bot::url_for_date(&Local::today().naive_local());
 
     let menu = {
@@ -53,8 +57,7 @@ fn main() {
     println!("{}", menu.to_markdown());
 
     for channel in &args.arg_slack_channel {
-        // TODO: Post to Slack
-        let slack = Slack::new("");
+        let slack = Slack::new(&env::var("WEBHOOK_URL").expect("WEBHOOK_URL is not set"));
         let p = Payload::new(PayloadTemplate::Complete {
             text: Some(&menu.to_markdown()),
             channel: Some(channel),
