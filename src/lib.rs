@@ -52,9 +52,9 @@ impl Menu {
             writeln!(output, "").unwrap();
         }
 
-        if (output.is_empty()) {
+        if output.is_empty() {
             writeln!(output,
-                     "There is no menu today ¯\_(ツ)_/¯");
+                     "There is no menu today ¯\\_(ツ)_/¯");
         }
 
         writeln!(output,
