@@ -52,6 +52,11 @@ impl Menu {
             writeln!(output, "").unwrap();
         }
 
+        if (output.is_empty()) {
+            writeln!(output,
+                     "There is no menu today ¯\_(ツ)_/¯");
+        }
+
         writeln!(output,
                  "> Made with :cnr: by @anrussell. Source available at \
                   https://github.com/euclio/nourishbot.")
