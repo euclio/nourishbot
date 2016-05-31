@@ -30,7 +30,7 @@ lazy_static! {
     static ref NUTRITION_RE: Regex = Regex::new(r"Cal.*Fat.*Sat.*Sod.*Carbs.*Fib.*Pro").unwrap();
 
     /// This Regex matches the price information, to filter it out from the menu output.
-    static ref PRICE_RE: Regex = Regex::new(r"^\d+\.\d+( / \d+\.\d+)?$").unwrap();
+    static ref PRICE_RE: Regex = Regex::new(r"^\d+\.\d+( ?/ ?(\d+\.\d+|[a-z]+))?$").unwrap();
 }
 
 /// The Nourish menu for a given date.
@@ -119,7 +119,7 @@ pub fn parse_menu(html: &str) -> Menu {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{PRICE_RE, url_for_date};
 
     use chrono::NaiveDate;
 
@@ -140,5 +140,14 @@ mod tests {
         assert_eq!(expected_url,
                    &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).serialize());
 
+    }
+
+    #[test]
+    fn price_regex() {
+        let patterns = ["7.50", "0.25/oz", "2.15 / 2.65"];
+
+        for pattern in &patterns {
+            assert!(PRICE_RE.is_match(pattern), pattern.clone());
+        }
     }
 }
