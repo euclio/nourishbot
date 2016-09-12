@@ -44,12 +44,13 @@ fn main() {
         let client = Client::new();
 
         let mut res = client.get(url)
-                            .header(Connection::close())
-                            .send()
-                            .unwrap();
+            .header(Connection::close())
+            .send()
+            .unwrap();
 
-        let mut body = String::new();
-        res.read_to_string(&mut body).unwrap();
+        let mut bytes = vec![];
+        res.read_to_end(&mut bytes).unwrap();
+        let body = String::from_utf8_lossy(&bytes);
 
         nourish_bot::parse_menu(&body)
     };
