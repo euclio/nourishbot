@@ -1,8 +1,9 @@
+extern crate nourish_bot;
+
 extern crate chrono;
 extern crate docopt;
 extern crate dotenv;
-extern crate hyper;
-extern crate nourish_bot;
+extern crate reqwest;
 extern crate rustc_serialize;
 extern crate slack_hook;
 
@@ -11,8 +12,6 @@ use std::io::prelude::*;
 
 use chrono::Local;
 use docopt::Docopt;
-use hyper::Client;
-use hyper::header::Connection;
 use slack_hook::{Slack, Payload, PayloadTemplate};
 
 const USAGE: &'static str = r"
@@ -41,12 +40,7 @@ fn main() {
     let url = nourish_bot::url_for_date(&Local::today().naive_local());
 
     let menu = {
-        let client = Client::new();
-
-        let mut res = client.get(url)
-            .header(Connection::close())
-            .send()
-            .unwrap();
+        let mut res = reqwest::get(&url.to_string()).unwrap();
 
         let mut bytes = vec![];
         res.read_to_end(&mut bytes).unwrap();

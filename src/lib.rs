@@ -7,7 +7,6 @@
 extern crate lazy_static;
 
 extern crate chrono;
-extern crate hyper;
 extern crate inflector;
 extern crate linked_hash_map;
 extern crate regex;
