@@ -85,8 +85,8 @@ pub fn parse_menu(html: &str) -> Menu {
 
     let mut last_category = None;
 
-    let menu_node = document.find(Attr("id", "center_text")).first().unwrap();
-    for node in menu_node.find(Name("div")).iter() {
+    let menu_node = document.find(Attr("id", "center_text")).next().unwrap();
+    for node in menu_node.find(Name("div")) {
         let text = node.text().trim().to_owned();
 
         if NUTRITION_RE.is_match(&text) || PRICE_RE.is_match(&text) {
@@ -94,11 +94,11 @@ pub fn parse_menu(html: &str) -> Menu {
         }
 
         if let Some("font-weight:bold;") = node.attr("style") {
-            let category = text.to_lower_case().to_title_case();
+            let category = text.to_lowercase().to_title_case();
 
             // Filter out breakfast.
             if category != "Breakfast Special" {
-                last_category = Some(text.to_lower_case().to_title_case());
+                last_category = Some(text.to_lowercase().to_title_case());
             }
         } else {
             if let Some(ref category) = last_category {
@@ -128,7 +128,7 @@ mod tests {
                             nsf/weeklyMenuLaunch/8DURSE~04-18-2016/$file/day1.htm";
 
         assert_eq!(expected_url,
-                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).serialize());
+                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).to_string());
     }
 
     #[test]
@@ -137,7 +137,7 @@ mod tests {
                             nsf/weeklyMenuLaunch/8DURSE~04-11-2016/$file/day5.htm";
 
         assert_eq!(expected_url,
-                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).serialize());
+                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string());
 
     }
 

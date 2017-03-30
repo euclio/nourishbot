@@ -12,7 +12,7 @@ use std::io::prelude::*;
 
 use chrono::Local;
 use docopt::Docopt;
-use slack_hook::{Slack, Payload, PayloadTemplate};
+use slack_hook::{Slack, PayloadBuilder};
 
 const USAGE: &'static str = r"
 Nourishbot!
@@ -34,7 +34,9 @@ struct Args {
 }
 
 fn main() {
-    let args: Args = Docopt::new(USAGE).and_then(|d| d.decode()).unwrap_or_else(|e| e.exit());
+    let args: Args = Docopt::new(USAGE)
+        .and_then(|d| d.decode())
+        .unwrap_or_else(|e| e.exit());
     dotenv::dotenv().ok();
 
     let url = nourish_bot::url_for_date(&Local::today().naive_local());
@@ -52,17 +54,17 @@ fn main() {
     println!("{}", menu.to_markdown());
 
     for channel in &args.arg_slack_channel {
-        let slack = Slack::new(&env::var("WEBHOOK_URL").expect("WEBHOOK_URL is not set"));
-        let p = Payload::new(PayloadTemplate::Complete {
-            text: Some(&menu.to_markdown()),
-            channel: Some(channel),
-            username: Some("nourishbot"),
-            icon_url: None,
-            icon_emoji: Some(":athena:"),
-            attachments: None,
-            unfurl_links: Some(false),
-            link_names: Some(false),
-        });
+        let slack = Slack::new(env::var("WEBHOOK_URL")
+                                   .expect("WEBHOOK_URL is not set")
+                                   .as_str())
+                .unwrap();
+        let p = PayloadBuilder::new()
+            .text(menu.to_markdown().as_str())
+            .channel(channel.as_str())
+            .username("nourishbot")
+            .icon_emoji(":athena:")
+            .build()
+            .unwrap();
 
         match slack.send(&p) {
             Ok(()) => println!("Posted to {}", channel),
