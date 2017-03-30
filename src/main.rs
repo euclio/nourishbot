@@ -51,7 +51,10 @@ fn main() {
         nourish_bot::parse_menu(&body)
     };
 
-    println!("{}", menu.to_markdown());
+    let markdown = menu.to_markdown()
+        .unwrap_or_else(|| r"There is no menu today ¯\_(ツ)_/¯".to_string());
+
+    println!("{}", markdown);
 
     for channel in &args.arg_slack_channel {
         let slack = Slack::new(env::var("WEBHOOK_URL")
@@ -59,7 +62,7 @@ fn main() {
                                    .as_str())
                 .unwrap();
         let p = PayloadBuilder::new()
-            .text(menu.to_markdown().as_str())
+            .text(markdown.as_str())
             .channel(channel.as_str())
             .username("nourishbot")
             .icon_emoji(":athena:")

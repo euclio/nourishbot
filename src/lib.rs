@@ -38,7 +38,7 @@ pub struct Menu(LinkedHashMap<String, Vec<String>>);
 
 impl Menu {
     /// Renders the menu as a Markdown string.
-    pub fn to_markdown(&self) -> String {
+    pub fn to_markdown(&self) -> Option<String> {
         let mut output = String::default();
 
         for (ref category, ref items) in &self.0 {
@@ -52,7 +52,7 @@ impl Menu {
         }
 
         if output.is_empty() {
-            writeln!(output, "There is no menu today ¯\\_(ツ)_/¯").unwrap();
+            return None;
         }
 
         writeln!(output,
@@ -60,7 +60,7 @@ impl Menu {
                   https://github.com/euclio/nourishbot.")
             .unwrap();
 
-        output
+        Some(output)
     }
 }
 
