@@ -3,6 +3,7 @@ authors = ["Andy Russell <arussell123@gmail.com>"]
 name = "nourish-bot"
 version = "0.1.0"
 license = "MIT/Apache-2.0"
+description = "Prints the Nourish menu at athenahealth Watertown."
 
 [dependencies]
 Inflector = "0.10"
