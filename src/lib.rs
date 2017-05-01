@@ -58,7 +58,7 @@ impl Menu {
         writeln!(output,
                  "> Made with :cnr: by @anrussell. Source available at \
                   https://github.com/euclio/nourishbot.")
-            .unwrap();
+                .unwrap();
 
         Some(output)
     }
@@ -74,7 +74,7 @@ pub fn url_for_date(date: &NaiveDate) -> Url {
                        nsf/weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
                         monday.format("%m-%d-%Y"),
                         days_from_monday + 1))
-        .unwrap()
+            .unwrap()
 }
 
 /// Parses the menu information out of HTML.
