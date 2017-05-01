@@ -51,27 +51,29 @@ fn main() {
         return;
     }
 
-    let channels = matches
-        .values_of("slack-channel")
-        .map(Iterator::collect)
-        .unwrap_or_else(|| vec![]);
+    if let Some(sub_matches) = matches.subcommand_matches("post") {
+        let channels = sub_matches
+            .values_of("slack-channel")
+            .map(Iterator::collect)
+            .unwrap_or_else(|| vec![]);
 
-    for channel in &channels {
-        let slack = Slack::new(env::var("WEBHOOK_URL")
-                                   .expect("WEBHOOK_URL is not set")
-                                   .as_str())
+        for channel in &channels {
+            let slack = Slack::new(env::var("WEBHOOK_URL")
+                                       .expect("WEBHOOK_URL is not set")
+                                       .as_str())
+                    .unwrap();
+            let p = PayloadBuilder::new()
+                .text(markdown.as_str())
+                .channel(*channel)
+                .username("nourishbot")
+                .icon_emoji(":athena:")
+                .build()
                 .unwrap();
-        let p = PayloadBuilder::new()
-            .text(markdown.as_str())
-            .channel(*channel)
-            .username("nourishbot")
-            .icon_emoji(":athena:")
-            .build()
-            .unwrap();
 
-        match slack.send(&p) {
-            Ok(()) => println!("Posted to {}", channel),
-            Err(err) => println!("Error posting to {}: {}", channel, err),
+            match slack.send(&p) {
+                Ok(()) => println!("Posted to {}", channel),
+                Err(err) => println!("Error posting to {}: {}", channel, err),
+            }
         }
     }
 }
