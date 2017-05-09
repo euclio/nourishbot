@@ -7,6 +7,7 @@ extern crate chrono;
 extern crate dotenv;
 extern crate reqwest;
 extern crate slack_hook;
+extern crate webbrowser;
 
 use std::env;
 use std::io::prelude::*;
@@ -20,6 +21,8 @@ fn main() {
         .version(crate_version!())
         .about(crate_description!())
         .subcommand(SubCommand::with_name("print").about("Print the nourish menu"))
+        .subcommand(SubCommand::with_name("open")
+                        .about("Open the nourish menu in the default web browser"))
         .subcommand(SubCommand::with_name("post")
                         .about("Post the nourish menu to the given Slack channels")
                         .arg(Arg::with_name("slack-channel")
@@ -31,6 +34,11 @@ fn main() {
     dotenv::dotenv().ok();
 
     let url = nourish_bot::url_for_date(&Local::today().naive_local());
+
+    if let Some("open") = matches.subcommand_name() {
+        webbrowser::open(&url.to_string()).expect("problem opening web browser");
+        return;
+    }
 
     let menu = {
         let mut res = reqwest::get(&url.to_string()).unwrap();
