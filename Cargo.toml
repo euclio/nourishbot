@@ -5,6 +5,11 @@ version = "0.1.0"
 license = "MIT/Apache-2.0"
 description = "Prints the Nourish menu at athenahealth Watertown."
 
+[[bin]]
+doc = false
+name = "nourish-bot"
+path = "src/main.rs"
+
 [dependencies]
 Inflector = "0.10"
 chrono = "0.3"
