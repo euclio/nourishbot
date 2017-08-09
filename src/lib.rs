@@ -105,35 +105,38 @@ pub fn url_for_date(date: &NaiveDate) -> Url {
 /// Parses the menu information out of HTML.
 pub fn parse_menu(html: &str) -> Menu {
     let document = Document::from(html);
+    let menu_node = document.find(Attr("id", "center_text")).next().unwrap();
 
     let mut menu: LinkedHashMap<String, Vec<String>> = LinkedHashMap::new();
+    let mut current_heading = None;
 
-    let mut last_category = None;
-
-    let menu_node = document.find(Attr("id", "center_text")).next().unwrap();
-    for node in menu_node.find(Name("div")) {
+    for node in menu_node.children() {
         let text = node.text().trim().to_owned();
 
-        if NUTRITION_RE.is_match(&text) || PRICE_RE.is_match(&text) {
+        // Skip the node unless it's a div.
+        if !node.is(Name("div")) {
             continue;
         }
 
         if let Some("font-weight:bold;") = node.attr("style") {
-            let category = text.to_lowercase().to_title_case();
-
-            // Filter out breakfast.
-            if category != "Breakfast Special" {
-                last_category = Some(text.to_lowercase().to_title_case());
-            }
+            current_heading = Some(text.to_lowercase().to_title_case());
         } else {
-            if let Some(ref category) = last_category {
-                if menu.contains_key(category) {
-                    let mut entries = menu.get_mut(category).unwrap();
-                    entries.push(text);
-                } else {
-                    menu.insert(category.to_owned(), vec![text]);
+            if let Some(ref heading) = current_heading {
+                // Skip breakfast
+                if heading == "Breakfast Special" {
+                    continue;
                 }
 
+                // Skip nutrition and price information.
+                if NUTRITION_RE.is_match(&text) || PRICE_RE.is_match(&text) {
+                    continue;
+                }
+
+                let items = menu.entry(heading.clone()).or_insert_with(Vec::default);
+                items.push(text);
+            } else {
+                println!("encountered entry without a heading");
+                continue;
             }
         }
     }
