@@ -25,6 +25,10 @@ use select::predicate::{Attr, Name};
 use url::Url;
 
 lazy_static! {
+    /// Extracts the ingredients out of the text of a menu item.
+    static ref INGREDIENTS_RE: Regex =
+        Regex::new(r"Ingredients: (.*?)(?: - Serving Size.*)?\s*$").unwrap();
+
     /// This Regex matches nutritional information, to filter it out from the menu output.
     static ref NUTRITION_RE: Regex = Regex::new(r"Cal.*Fat.*Sat.*Sod.*Carbs.*Fib.*Pro").unwrap();
 
@@ -34,7 +38,7 @@ lazy_static! {
 
 /// The Nourish menu for a given date.
 #[derive(Debug, Clone, Default)]
-pub struct Menu(LinkedHashMap<String, Vec<String>>);
+pub struct Menu(LinkedHashMap<String, Entry>);
 
 /// A section of the menu.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,6 +48,10 @@ pub struct Entry {
 
     /// The food items listed under the header.
     pub items: Vec<String>,
+
+    /// Information indicating what ingredients are in the food, including whether it's vegetarian,
+    /// vegan, etc.
+    pub dietary_info: Option<String>,
 }
 
 impl Display for Entry {
@@ -51,7 +59,13 @@ impl Display for Entry {
         writeln!(f, "*{}*\n", self.heading)?;
 
         for item in &self.items {
-            writeln!(f, "• {}", item)?;
+            let dietary_info = if let Some(ref info) = self.dietary_info {
+                format!(" (_{}_)", info)
+            } else {
+                String::default()
+            };
+
+            writeln!(f, "• {}{}", item, dietary_info)?;
         }
 
         Ok(())
@@ -61,15 +75,7 @@ impl Display for Entry {
 impl Menu {
     /// Returns the entries of the menu.
     pub fn entries(&mut self) -> Vec<Entry> {
-        self.0
-            .entries()
-            .map(|e| {
-                Entry {
-                    heading: e.key().to_owned(),
-                    items: e.get().to_owned(),
-                }
-            })
-            .collect()
+        self.0.values().cloned().collect()
     }
 
     /// Renders the menu as a Markdown string.
@@ -113,16 +119,11 @@ pub fn parse_menu(html: &str) -> Menu {
     let document = Document::from(html);
     let menu_node = document.find(Attr("id", "center_text")).next().unwrap();
 
-    let mut menu: LinkedHashMap<String, Vec<String>> = LinkedHashMap::new();
+    let mut menu = LinkedHashMap::new();
     let mut current_heading = None;
 
     for node in menu_node.children() {
         let text = node.text().trim().to_owned();
-
-        // Skip the node unless it's a div.
-        if !node.is(Name("div")) {
-            continue;
-        }
 
         if let Some("font-weight:bold;") = node.attr("style") {
             current_heading = Some(text.to_lowercase().to_title_case());
@@ -138,8 +139,19 @@ pub fn parse_menu(html: &str) -> Menu {
                     continue;
                 }
 
-                let items = menu.entry(heading.clone()).or_insert_with(Vec::default);
-                items.push(text);
+                let mut entry = menu.entry(heading.clone()).or_insert_with(|| {
+                    Entry {
+                        heading: heading.to_owned(),
+                        items: Vec::new(),
+                        dietary_info: None,
+                    }
+                });
+
+                if node.is(Name("div")) {
+                    entry.items.push(text);
+                } else if let Some(caps) = INGREDIENTS_RE.captures(&text) {
+                    entry.dietary_info = Some(caps[1].to_owned());
+                }
             } else {
                 println!("encountered entry without a heading");
                 continue;
@@ -175,6 +187,25 @@ mod tests {
             &super::url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string()
         );
 
+    }
+
+    #[test]
+    fn ingredients_regex() {
+        use super::INGREDIENTS_RE;
+
+        let test_cases = [
+            ("Ingredients: Pork, Egg, Spicy", "Pork, Egg, Spicy"),
+            (
+                "Ingredients: Vegetarian - Contains Wheat, Dairy",
+                "Vegetarian - Contains Wheat, Dairy",
+            ),
+            ("Ingredients: Vegan - Serving Size 12oz", "Vegan"),
+        ];
+
+        for &(text, ingredients) in &test_cases {
+            let capture = INGREDIENTS_RE.captures(text).unwrap().get(1).unwrap();
+            assert_eq!(capture.as_str(), ingredients);
+        }
     }
 
     #[test]
