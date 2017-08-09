@@ -92,8 +92,8 @@ impl Menu {
 
         writeln!(
             output,
-            "> Made with :cnr: by @anrussell. Source available at \
-                  https://github.com/euclio/nourishbot."
+            "> Made with :btb: by @anrussell. Please direct feature requests and bug reports to \
+             https://github.com/euclio/nourishbot."
         ).unwrap();
 
         Some(output)
