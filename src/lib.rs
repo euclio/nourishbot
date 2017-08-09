@@ -152,8 +152,6 @@ pub fn parse_menu(html: &str) -> Menu {
 
 #[cfg(test)]
 mod tests {
-    use super::{PRICE_RE, url_for_date};
-
     use chrono::NaiveDate;
 
     #[test]
@@ -163,7 +161,7 @@ mod tests {
 
         assert_eq!(
             expected_url,
-            &url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).to_string()
+            &super::url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).to_string()
         );
     }
 
@@ -174,13 +172,15 @@ mod tests {
 
         assert_eq!(
             expected_url,
-            &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string()
+            &super::url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string()
         );
 
     }
 
     #[test]
     fn price_regex() {
+        use super::PRICE_RE;
+
         let patterns = ["7.50", "0.25/oz", "2.15 / 2.65"];
 
         for pattern in &patterns {
