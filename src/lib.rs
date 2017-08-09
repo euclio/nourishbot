@@ -14,7 +14,7 @@ extern crate select;
 extern crate url;
 
 use std::cmp;
-use std::fmt::Write;
+use std::fmt::{self, Display, Write};
 
 use chrono::{Datelike, Duration, NaiveDate};
 use inflector::Inflector;
@@ -46,6 +46,18 @@ pub struct Entry {
     pub items: Vec<String>,
 }
 
+impl Display for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "*{}*\n", self.heading)?;
+
+        for item in &self.items {
+            writeln!(f, "• {}", item)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl Menu {
     /// Returns the entries of the menu.
     pub fn entries(&mut self) -> Vec<Entry> {
@@ -61,17 +73,11 @@ impl Menu {
     }
 
     /// Renders the menu as a Markdown string.
-    pub fn to_markdown(&self) -> Option<String> {
+    pub fn to_markdown(&mut self) -> Option<String> {
         let mut output = String::default();
 
-        for (ref category, ref items) in &self.0 {
-            writeln!(output, "*{}*\n", category).unwrap();
-
-            for item in items.iter() {
-                writeln!(output, "• {}", item).unwrap();
-            }
-
-            writeln!(output, "").unwrap();
+        for entry in self.entries() {
+            writeln!(output, "{}", entry).unwrap();
         }
 
         if output.is_empty() {

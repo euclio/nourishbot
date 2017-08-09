@@ -40,7 +40,7 @@ fn main() {
         return;
     }
 
-    let menu = {
+    let mut menu = {
         let mut res = reqwest::get(&url.to_string()).unwrap();
 
         let mut bytes = vec![];
