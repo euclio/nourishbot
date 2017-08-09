@@ -36,7 +36,30 @@ lazy_static! {
 #[derive(Debug, Clone, Default)]
 pub struct Menu(LinkedHashMap<String, Vec<String>>);
 
+/// A section of the menu.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Entry {
+    /// The section header.
+    pub heading: String,
+
+    /// The food items listed under the header.
+    pub items: Vec<String>,
+}
+
 impl Menu {
+    /// Returns the entries of the menu.
+    pub fn entries(&mut self) -> Vec<Entry> {
+        self.0
+            .entries()
+            .map(|e| {
+                Entry {
+                    heading: e.key().to_owned(),
+                    items: e.get().to_owned(),
+                }
+            })
+            .collect()
+    }
+
     /// Renders the menu as a Markdown string.
     pub fn to_markdown(&self) -> Option<String> {
         let mut output = String::default();
@@ -55,10 +78,11 @@ impl Menu {
             return None;
         }
 
-        writeln!(output,
-                 "> Made with :cnr: by @anrussell. Source available at \
-                  https://github.com/euclio/nourishbot.")
-                .unwrap();
+        writeln!(
+            output,
+            "> Made with :cnr: by @anrussell. Source available at \
+                  https://github.com/euclio/nourishbot."
+        ).unwrap();
 
         Some(output)
     }
@@ -70,11 +94,12 @@ pub fn url_for_date(date: &NaiveDate) -> Url {
     let days_from_monday = cmp::min(date.weekday().num_days_from_monday(), 4);
     let monday = *date - Duration::days(date.weekday().num_days_from_monday() as i64);
 
-    Url::parse(&format!("http://dining.guckenheimer.com/clients/athenahealth/fss/fss.\
+    Url::parse(&format!(
+        "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.\
                        nsf/weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
-                        monday.format("%m-%d-%Y"),
-                        days_from_monday + 1))
-            .unwrap()
+        monday.format("%m-%d-%Y"),
+        days_from_monday + 1
+    )).unwrap()
 }
 
 /// Parses the menu information out of HTML.
@@ -127,8 +152,10 @@ mod tests {
         let expected_url = "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.\
                             nsf/weeklyMenuLaunch/8DURSE~04-18-2016/$file/day1.htm";
 
-        assert_eq!(expected_url,
-                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).to_string());
+        assert_eq!(
+            expected_url,
+            &url_for_date(&NaiveDate::from_ymd(2016, 4, 18)).to_string()
+        );
     }
 
     #[test]
@@ -136,8 +163,10 @@ mod tests {
         let expected_url = "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.\
                             nsf/weeklyMenuLaunch/8DURSE~04-11-2016/$file/day5.htm";
 
-        assert_eq!(expected_url,
-                   &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string());
+        assert_eq!(
+            expected_url,
+            &url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string()
+        );
 
     }
 
