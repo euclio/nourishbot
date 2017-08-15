@@ -12,7 +12,7 @@ extern crate webbrowser;
 use std::env;
 use std::io::prelude::*;
 
-use chrono::Local;
+use chrono::{NaiveDate, Local};
 use clap::{App, SubCommand, Arg};
 use slack_hook::{Slack, PayloadBuilder};
 
@@ -36,11 +36,30 @@ fn main() {
                         .help("A Slack channel (#food) or username (@anrussell)"),
                 ),
         )
+        .arg(
+            Arg::with_name("date")
+                .long("date")
+                .short("d")
+                .takes_value(true)
+                .help("the date that should be used to pull the menu")
+                .validator(|arg| if NaiveDate::parse_from_str(&arg, "%Y-%m-%d")
+                    .is_ok()
+                {
+                    Ok(())
+                } else {
+                    Err(String::from("Date is not in YYYY-MM-DD format"))
+                }),
+        )
         .get_matches();
 
     dotenv::dotenv().ok();
 
-    let url = nourish_bot::url_for_date(&Local::today().naive_local());
+    let date = matches
+        .value_of("date")
+        .map(|arg| NaiveDate::parse_from_str(&arg, "%Y-%m-%d").unwrap())
+        .unwrap_or_else(|| Local::today().naive_local());
+
+    let url = nourish_bot::url_for_date(&date);
 
     if let Some("open") = matches.subcommand_name() {
         webbrowser::open(&url.to_string()).expect("problem opening web browser");
