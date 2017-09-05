@@ -37,7 +37,7 @@ lazy_static! {
 }
 
 /// The Nourish menu for a given date.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Menu(LinkedHashMap<String, Entry>);
 
 /// A section of the menu.
@@ -58,7 +58,13 @@ impl Display for Entry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "*{}*\n", self.heading)?;
 
-        for item in &self.items {
+        let items = if self.items.is_empty() {
+            vec![String::from("Nothing today")]
+        } else {
+            self.items.clone()
+        };
+
+        for item in &items {
             let dietary_info = if let Some(ref info) = self.dietary_info {
                 format!(" (_{}_)", info)
             } else {
@@ -107,8 +113,8 @@ pub fn url_for_date(date: &NaiveDate) -> Url {
     let monday = *date - Duration::days(date.weekday().num_days_from_monday() as i64);
 
     Url::parse(&format!(
-        "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.\
-                       nsf/weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
+        "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.nsf\
+        /weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
         monday.format("%m-%d-%Y"),
         days_from_monday + 1
     )).unwrap()
@@ -139,7 +145,7 @@ pub fn parse_menu(html: &str) -> Menu {
                     continue;
                 }
 
-                let mut entry = menu.entry(heading.clone()).or_insert_with(|| {
+                let entry = menu.entry(heading.clone()).or_insert_with(|| {
                     Entry {
                         heading: heading.to_owned(),
                         items: Vec::new(),
@@ -147,7 +153,7 @@ pub fn parse_menu(html: &str) -> Menu {
                     }
                 });
 
-                if node.is(Name("div")) {
+                if node.is(Name("div")) && !text.is_empty() {
                     entry.items.push(text);
                 } else if let Some(caps) = INGREDIENTS_RE.captures(&text) {
                     entry.dietary_info = Some(caps[1].to_owned());
@@ -165,6 +171,41 @@ pub fn parse_menu(html: &str) -> Menu {
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDate;
+    use linked_hash_map::LinkedHashMap;
+
+    use super::{Entry, Menu};
+
+    #[test]
+    fn parse_menu() {
+        let html = r#"
+            <html>
+            <body>
+            <table>
+                <tr>
+                    <td id="center_text">
+                        <div style="font-weight:bold;">CHEF'S SPECIAL PIZZA</div>
+                        <div> </div>
+                        <br>
+                    </td>
+                </tr>
+            </table>
+            </body>
+            </html>
+        "#;
+
+        let menu = super::parse_menu(html);
+        let expected = {
+            let mut menu = LinkedHashMap::new();
+            menu.insert(String::from("Chef's Special Pizza"), Entry {
+                heading: String::from("Chef's Special Pizza"),
+                items: vec![],
+                dietary_info: None,
+            });
+            Menu(menu)
+        };
+
+        assert_eq!(menu, expected);
+    }
 
     #[test]
     fn monday() {
