@@ -14,7 +14,7 @@ fn parse_menu() {
         html
     };
 
-    let mut menu = nourish_bot::parse_menu(&html);
+    let menu = nourish_bot::parse_menu(&html);
     assert_eq!(
         menu.entries(),
         vec![

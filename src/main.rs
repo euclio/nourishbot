@@ -16,6 +16,8 @@ use chrono::{NaiveDate, Local};
 use clap::{App, SubCommand, Arg};
 use slack_hook::{Slack, PayloadBuilder};
 
+use nourish_bot::Menu;
+
 fn main() {
     let matches = App::new(crate_name!())
         .version(crate_version!())
@@ -66,19 +68,29 @@ fn main() {
         return;
     }
 
-    let mut menu = {
+    let menu: Result<Menu, String> = {
         let mut res = reqwest::get(&url.to_string()).unwrap();
 
-        let mut bytes = vec![];
-        res.read_to_end(&mut bytes).unwrap();
-        let body = String::from_utf8_lossy(&bytes);
-
-        nourish_bot::parse_menu(&body)
+        if res.status().is_success() {
+            let mut bytes = vec![];
+            res.read_to_end(&mut bytes).unwrap();
+            let body = String::from_utf8_lossy(&bytes);
+            Ok(nourish_bot::parse_menu(&body))
+        } else {
+            Err(format!("Could not access menu: {}", res.status()))
+        }
     };
 
-    let markdown = menu.to_markdown().unwrap_or_else(|| {
-        r"There is no menu today ¯\_(ツ)_/¯".to_string()
+    let markdown_result = menu.and_then(|menu| {
+        menu.to_markdown().ok_or_else(|| {
+            String::from(r"There is no menu today ¯\_(ツ)_/¯")
+        })
     });
+
+    let markdown = match markdown_result {
+        Ok(markdown) => markdown,
+        Err(e) => format!("Error: {}", e),
+    };
 
     println!("{}", markdown);
 

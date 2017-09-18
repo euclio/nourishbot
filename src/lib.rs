@@ -80,12 +80,12 @@ impl Display for Entry {
 
 impl Menu {
     /// Returns the entries of the menu.
-    pub fn entries(&mut self) -> Vec<Entry> {
+    pub fn entries(&self) -> Vec<Entry> {
         self.0.values().cloned().collect()
     }
 
     /// Renders the menu as a Markdown string.
-    pub fn to_markdown(&mut self) -> Option<String> {
+    pub fn to_markdown(&self) -> Option<String> {
         let mut output = String::default();
 
         for entry in self.entries() {
@@ -196,11 +196,14 @@ mod tests {
         let menu = super::parse_menu(html);
         let expected = {
             let mut menu = LinkedHashMap::new();
-            menu.insert(String::from("Chef's Special Pizza"), Entry {
-                heading: String::from("Chef's Special Pizza"),
-                items: vec![],
-                dietary_info: None,
-            });
+            menu.insert(
+                String::from("Chef's Special Pizza"),
+                Entry {
+                    heading: String::from("Chef's Special Pizza"),
+                    items: vec![],
+                    dietary_info: None,
+                },
+            );
             Menu(menu)
         };
 
