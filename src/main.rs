@@ -10,13 +10,12 @@ extern crate slack_hook;
 extern crate webbrowser;
 
 use std::env;
-use std::io::prelude::*;
 
 use chrono::{NaiveDate, Local};
 use clap::{App, SubCommand, Arg};
 use slack_hook::{Slack, PayloadBuilder};
 
-use nourish_bot::Menu;
+use nourish_bot::errors::*;
 
 fn main() {
     let matches = App::new(crate_name!())
@@ -68,28 +67,19 @@ fn main() {
         return;
     }
 
-    let menu: Result<Menu, String> = {
-        let mut res = reqwest::get(&url.to_string()).unwrap();
+    let markdown = nourish_bot::retrieve_menu(&date).and_then(|menu| menu.to_markdown());
 
-        if res.status().is_success() {
-            let mut bytes = vec![];
-            res.read_to_end(&mut bytes).unwrap();
-            let body = String::from_utf8_lossy(&bytes);
-            Ok(nourish_bot::parse_menu(&body))
-        } else {
-            Err(format!("Could not access menu: {}", res.status()))
-        }
-    };
-
-    let markdown_result = menu.and_then(|menu| {
-        menu.to_markdown().ok_or_else(|| {
-            String::from(r"There is no menu today ¯\_(ツ)_/¯")
-        })
-    });
-
-    let markdown = match markdown_result {
+    let markdown = match markdown {
         Ok(markdown) => markdown,
-        Err(e) => format!("Error: {}", e),
+        Err(e) => {
+            match e {
+                Error(ErrorKind::EmptyMenu, _) => String::from(
+                    r"There is no menu today ¯\_(ツ)_/¯",
+                ),
+                Error(ErrorKind::Network(_), _) => e.to_string(),
+                _ => String::from("Unspecified error."),
+            }
+        }
     };
 
     println!("{}", markdown);

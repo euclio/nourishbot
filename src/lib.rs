@@ -4,17 +4,22 @@
 #![warn(missing_docs)]
 
 #[macro_use]
+extern crate error_chain;
+
+#[macro_use]
 extern crate lazy_static;
 
 extern crate chrono;
 extern crate inflector;
 extern crate linked_hash_map;
 extern crate regex;
+extern crate reqwest;
 extern crate select;
 extern crate url;
 
 use std::cmp;
 use std::fmt::{self, Display, Write};
+use std::io::prelude::*;
 
 use chrono::{Datelike, Duration, NaiveDate};
 use inflector::Inflector;
@@ -23,6 +28,10 @@ use regex::Regex;
 use select::document::Document;
 use select::predicate::{Attr, Name};
 use url::Url;
+
+pub mod errors;
+
+use errors::*;
 
 lazy_static! {
     /// Extracts the ingredients out of the text of a menu item.
@@ -85,7 +94,7 @@ impl Menu {
     }
 
     /// Renders the menu as a Markdown string.
-    pub fn to_markdown(&self) -> Option<String> {
+    pub fn to_markdown(&self) -> Result<String> {
         let mut output = String::default();
 
         for entry in self.entries() {
@@ -93,7 +102,7 @@ impl Menu {
         }
 
         if output.is_empty() {
-            return None;
+            bail!(ErrorKind::EmptyMenu);
         }
 
         writeln!(
@@ -102,9 +111,29 @@ impl Menu {
              https://github.com/euclio/nourishbot."
         ).unwrap();
 
-        Some(output)
+        Ok(output)
     }
 }
+
+/// Retrieves and parses the menu for a given date.
+pub fn retrieve_menu(date: &NaiveDate) -> Result<Menu> {
+    let url = url_for_date(date);
+
+    let mut res = reqwest::get(url.as_str()).map_err(|e| {
+        ErrorKind::Network(e.to_string())
+    })?;
+
+    let body = if res.status().is_success() {
+        let mut bytes = vec![];
+        res.read_to_end(&mut bytes)?;
+        String::from_utf8_lossy(&bytes).into_owned()
+    } else {
+        bail!(ErrorKind::Network(format!("bad status {}", res.status())))
+    };
+
+    Ok(parse_menu(&body))
+}
+
 
 /// Returns the URL pointing to the Nourish menu for a given day. On the weekends, returns Friday's
 /// menu.
