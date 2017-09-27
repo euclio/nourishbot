@@ -13,7 +13,6 @@ dependencies = [
  "reqwest 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "select 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "slack-hook 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "webbrowser 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

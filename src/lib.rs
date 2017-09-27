@@ -15,7 +15,6 @@ extern crate linked_hash_map;
 extern crate regex;
 extern crate reqwest;
 extern crate select;
-extern crate url;
 
 use std::cmp;
 use std::fmt::{self, Display, Write};
@@ -25,9 +24,9 @@ use chrono::{Datelike, Duration, NaiveDate};
 use inflector::Inflector;
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
+use reqwest::Url;
 use select::document::Document;
 use select::predicate::{Attr, Name};
-use url::Url;
 
 pub mod errors;
 
