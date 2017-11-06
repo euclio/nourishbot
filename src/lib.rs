@@ -127,7 +127,7 @@ pub fn retrieve_menu(date: &NaiveDate) -> Result<Menu> {
         res.read_to_end(&mut bytes)?;
         String::from_utf8_lossy(&bytes).into_owned()
     } else {
-        bail!(ErrorKind::Network(format!("bad status {}", res.status())))
+        bail!(ErrorKind::Network(res.status().to_string()))
     };
 
     Ok(parse_menu(&body))

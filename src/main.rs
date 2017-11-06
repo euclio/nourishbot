@@ -10,12 +10,16 @@ extern crate slack_hook;
 extern crate webbrowser;
 
 use std::env;
+use std::fmt::Write;
 
 use chrono::{NaiveDate, Local};
 use clap::{App, SubCommand, Arg};
 use slack_hook::{Slack, PayloadBuilder};
 
 use nourish_bot::errors::*;
+
+static FOOTER: &str = "> Made with :btb: by @anrussell. Please direct feature requests and bug \
+                       reports to https://github.com/euclio/nourishbot";
 
 fn main() {
     let matches = App::new(crate_name!())
@@ -67,20 +71,38 @@ fn main() {
         return;
     }
 
-    let markdown = nourish_bot::retrieve_menu(&date).and_then(|menu| menu.to_markdown());
+    let menu = nourish_bot::retrieve_menu(&date).and_then(|menu| menu.to_markdown());
 
-    let markdown = match markdown {
-        Ok(markdown) => markdown,
+    let message = match menu {
+        Ok(menu) => menu,
         Err(e) => {
             match e {
                 Error(ErrorKind::EmptyMenu, _) => String::from(
-                    r"There is no menu today ¯\_(ツ)_/¯",
+                    r"The menu was empty today. Is it a holiday? ¯\_(ツ)_/¯",
                 ),
-                Error(ErrorKind::Network(_), _) => e.to_string(),
-                _ => String::from("Unspecified error."),
+                Error(ErrorKind::Network(_), _) => {
+                    let mut message = String::new();
+                    writeln!(
+                        message,
+                        "Sorry, there was a problem retrieving the menu. \
+                        I tried this link: {}",
+                        url,
+                    ).unwrap();
+                    writeln!(
+                        message,
+                        "This usually means that the menu for this week hasn't been posted yet. \
+                        Try the link again later.",
+                    ).unwrap();
+                    writeln!(message).unwrap();
+                    writeln!(message, "_Error:_ `{}`", e.to_string()).unwrap();
+                    message
+                }
+                _ => String::from("Something went wrong while trying to get the menu. This is a bug."),
             }
         }
     };
+
+    let markdown = format!("{}\n{}", message, FOOTER);
 
     println!("{}", markdown);
 
