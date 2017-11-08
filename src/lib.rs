@@ -97,18 +97,12 @@ impl Menu {
         let mut output = String::default();
 
         for entry in self.entries() {
-            writeln!(output, "{}", entry).unwrap();
+            write!(output, "{}", entry).unwrap();
         }
 
         if output.is_empty() {
             bail!(ErrorKind::EmptyMenu);
         }
-
-        writeln!(
-            output,
-            "> Made with :btb: by @anrussell. Please direct feature requests and bug reports to \
-             https://github.com/euclio/nourishbot."
-        ).unwrap();
 
         Ok(output)
     }
