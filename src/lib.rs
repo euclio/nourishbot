@@ -97,7 +97,7 @@ impl Menu {
         let mut output = String::default();
 
         for entry in self.entries() {
-            write!(output, "{}", entry).unwrap();
+            writeln!(output, "{}", entry).unwrap();
         }
 
         if output.is_empty() {

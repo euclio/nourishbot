@@ -102,7 +102,7 @@ fn main() {
         }
     };
 
-    let markdown = format!("{}\n{}", message, FOOTER);
+    let markdown = format!("{}{}", message, FOOTER);
 
     println!("{}", markdown);
 
