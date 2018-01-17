@@ -175,10 +175,13 @@ pub fn parse_menu(html: &str) -> Menu {
                     }
                 });
 
-                if node.is(Name("div")) && !text.is_empty() {
-                    entry.items.push(text);
-                } else if let Some(caps) = INGREDIENTS_RE.captures(&text) {
-                    entry.dietary_info = Some(caps[1].to_owned());
+                if let Some(ref caps) = INGREDIENTS_RE.captures(&text) {
+                    let ingredients = &caps[1];
+                    if ingredients.chars().count() < 50 {
+                        entry.dietary_info = Some(caps[1].to_owned());
+                    }
+                } else if node.is(Name("div")) && !text.is_empty() {
+                    entry.items.push(text.to_owned());
                 }
             } else {
                 println!("encountered entry without a heading");
