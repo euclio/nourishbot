@@ -112,9 +112,7 @@ impl Menu {
 pub fn retrieve_menu(date: &NaiveDate) -> Result<Menu> {
     let url = url_for_date(date);
 
-    let mut res = reqwest::get(url.as_str()).map_err(|e| {
-        ErrorKind::Network(e.to_string())
-    })?;
+    let mut res = reqwest::get(url.as_str()).map_err(|e| ErrorKind::Network(e.to_string()))?;
 
     let body = if res.status().is_success() {
         let mut bytes = vec![];
@@ -127,7 +125,6 @@ pub fn retrieve_menu(date: &NaiveDate) -> Result<Menu> {
     Ok(parse_menu(&body))
 }
 
-
 /// Returns the URL pointing to the Nourish menu for a given day. On the weekends, returns Friday's
 /// menu.
 pub fn url_for_date(date: &NaiveDate) -> Url {
@@ -136,7 +133,7 @@ pub fn url_for_date(date: &NaiveDate) -> Url {
 
     Url::parse(&format!(
         "http://dining.guckenheimer.com/clients/athenahealth/fss/fss.nsf\
-        /weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
+         /weeklyMenuLaunch/8DURSE~{}/$file/day{}.htm",
         monday.format("%m-%d-%Y"),
         days_from_monday + 1
     )).unwrap()
@@ -167,12 +164,10 @@ pub fn parse_menu(html: &str) -> Menu {
                     continue;
                 }
 
-                let entry = menu.entry(heading.clone()).or_insert_with(|| {
-                    Entry {
-                        heading: heading.to_owned(),
-                        items: Vec::new(),
-                        dietary_info: None,
-                    }
+                let entry = menu.entry(heading.clone()).or_insert_with(|| Entry {
+                    heading: heading.to_owned(),
+                    items: Vec::new(),
+                    dietary_info: None,
                 });
 
                 if let Some(ref caps) = INGREDIENTS_RE.captures(&text) {
@@ -255,7 +250,6 @@ mod tests {
             expected_url,
             &super::url_for_date(&NaiveDate::from_ymd(2016, 4, 16)).to_string()
         );
-
     }
 
     #[test]
